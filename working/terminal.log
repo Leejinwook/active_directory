@@ -1,0 +1,24 @@
+PS C:\Users\local_admin\active_directory\code> $dc = New-PSSession 172.16.75.155 -Credential (Get-Credential)
+
+cmdlet Get-Credential at command pipeline position 1
+Supply values for the following parameters:
+Credential
+PS C:\Users\local_admin\active_directory\code> echo $dc
+
+ Id Name            ComputerName    ComputerType    State         ConfigurationName     Availability
+ -- ----            ------------    ------------    -----         -----------------     ------------
+  2 WinRM2          172.16.75.155   RemoteMachine   Opened        Microsoft.PowerShell     Available
+
+
+PS C:\Users\local_admin\active_directory\code> Copy-Item .\ad_schema.json -ToSession $dc c:\Windows\Tasks
+PS C:\Users\local_admin\active_directory\code> Enter-PSSession $dc
+[172.16.75.155]: PS C:\Users\Administrator\Documents> cd c:\Windows\Tasks
+[172.16.75.155]: PS C:\Windows\Tasks> ls
+
+
+    Directory: C:\Windows\Tasks
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----          9/7/2022  10:53 PM            311 ad_schema.json
