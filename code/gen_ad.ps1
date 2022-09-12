@@ -11,7 +11,7 @@ function RemoveADGroup(){
     param( [Parameter(Mandatory=$true)] $groupObject )
 
     $name = $groupObject.$name
-    Remove-ADGroup -Identify $name -Confirm:$False
+    Remove-ADGroup -Identity $name -Confirm:$False
 }
 
 function CreateADUser(){
@@ -31,23 +31,39 @@ function CreateADUser(){
     New-ADUser -Name "$name" -GivenName $firstname -Surname $lastname -SamAccountName $SamAccountName -UserPrincipalName $principalname@$Global:Domain -AccountPassword (ConvertTo-SecureString $password -AsPlainText -Force) -PassThru | Enable-ADAccount
 
     # Add the user to its appropriate group
-    foreach($group in $userObject.groups){
+    foreach($group_name in $userObject.groups){
 
         try{
-            Get-ADComputer -Identity "$group_name"
-            Add-ADGroupMember -Identify $group -Members $username
+            Get-ADGroup -Identity "$group_name"
+            Add-ADGroupMember -Identity $group_name -Members $username
         }
         catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
         {
             Write-Warning "User $name Not added to group $group_name becaust it does not exist"
         }
-
     }
+}
+
+function RemoveADUser(){
+    param( [Parameter(Mandatory=$true)] $userObject )
+
+    $name = $userObject.$name
+    $firstname, $lastname = $name.Split(" ")
+    $username = ($firstname[0] + $lastname).ToLower()
+    $samAccountName = $username
+    Remove-ADUser -Identity $samAccountName -Confirm:$False
 }
 
 function WeakenasswordPolicy(){
     secedit /export /cfg c:\Windows\Tasks\secpol.cfg
-    (Get-Content c:\Windows\Tasks\secpol.cfg).replace("PasswordComplexity = 1", "PasswordComplexity = 0") | Out-File c:\Windows\Tasks\secpol.cfg
+    (Get-Content c:\Windows\Tasks\secpol.cfg).replace("PasswordComplexity = 1", "PasswordComplexity = 0").replace("MinimumPasswordLength = 7", "MinimumPasswordLength = 1") | Out-File c:\Windows\Tasks\secpol.cfg
+    secedit /configure /db c:\Windows\security\local.sdb /cfg c:\Windows\Tasks\secpol.cfg /areas SECURITYPOLICY
+    rm -force c:\Windows\Tasks\secpol.cfg -confirm:$false
+}
+
+function StrengthenPassowrdPolicy(){
+    secedit /export /cfg c:\Windows\Tasks\secpol.cfg
+    (Get-Content c:\Windows\Tasks\secpol.cfg).replace("PasswordComplexity = 0", "PasswordComplexity = 1").replace("MinimumPasswordLength = 1", "MinimumPasswordLength = 7") | Out-File c:\Windows\Tasks\secpol.cfg
     secedit /configure /db c:\Windows\security\local.sdb /cfg c:\Windows\Tasks\secpol.cfg /areas SECURITYPOLICY
     rm -force c:\Windows\Tasks\secpol.cfg -confirm:$false
 }
