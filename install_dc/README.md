@@ -10,3 +10,14 @@
 ```shell
 Install-WindowsFeature AD-Domain-Service -IncludeManagementTools
 ```
+
+
+
+# 02. Management Server
+```powershell
+Start-Service WinRM
+get-item wsman:\localhost\Client\TrustedHosts
+set-item wsman:\localhost\Client\TrustedHosts -value 192.168.126.100
+
+$dc = New-PSSession $ip -Credential $cred
+```
